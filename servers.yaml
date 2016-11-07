@@ -1,0 +1,22 @@
+--- 
+- 
+  box: puppetlabs/ubuntu-16.04-64-nocm  
+  cpu: 2
+  ip: "172.17.10.101"
+  name: dirtyc0w
+  forward_ports: []   
+  ram: 4096
+  shell_commands:
+      - { shell: 'apt-get update -y && apt-get install -y wget git'}   
+      - { shell: 'curl -fsSL https://test.docker.com/ | sh'}
+      - { shell: 'echo DOCKER_OPTS=\" -H tcp://127.0.0.1:4243 -H unix:///var/run/docker.sock --ip-forward=true --iptables=true --ip-masq=true\">>/etc/default/docker'}  
+      - { shell: 'service docker restart && sleep 15'}
+      - { shell: '/etc/init.d/apparmor stop'} 
+      - { shell: 'mkdir -p /etc/apparmor.d/containers/ && cp /vagrant/nginx-docker /etc/apparmor.d/containers/docker-nginx'}
+      - { shell: 'apparmor_parser -r -W /etc/apparmor.d/containers/docker-nginx'}
+      - { shell: '/etc/init.d/apparmor start'}
+      - { shell: 'cd /vagrant/dirtyc0w/ && docker build -t scottyc/dirtyc0w .'}
+      - { shell:  'docker run -p 80:80 -d --name nginx scottyc/dirtyc0w'}  
+ 
+
+
